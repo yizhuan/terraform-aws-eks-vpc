@@ -51,31 +51,13 @@ resource "aws_db_instance" "my_db" {
   password             = var.db_password
   parameter_group_name = "default.postgres12"
   skip_final_snapshot  = true
+  vpc_security_group_ids = [aws_security_group.my_sg_db.id]  # Attach the security group
   db_subnet_group_name = aws_db_subnet_group.my_db_subnet_group.name
 }
 
 #################################################
 # ECR
 #################################################
-
-# ECR subnet
-resource "aws_subnet" "private_subnet_ecr" {
-  vpc_id     = aws_vpc.my_vpc.id
-  cidr_block = var.private_subnet_ecr_cidr
-}
-
-# ECR security group
-resource "aws_security_group" "my_sg_ecr" {
-  vpc_id = aws_vpc.my_vpc.id
-
-  # Ingress rules for ECR (example: allow HTTPS)
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = [var.allowed_ip]
-  }
-}
 
 # ECR
 resource "aws_ecr_repository" "my_ecr" {

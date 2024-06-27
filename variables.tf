@@ -12,14 +12,6 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-
-# ECR
-variable "private_subnet_ecr_cidr" {
-  description = "CIDR block for ECR private subnet"
-  type        = string
-  default     = "10.0.101.0/24"
-}
-
 # DB
 variable "private_subnet_db_0_cidr" {
   description = "CIDR block for db private subnet"
@@ -32,7 +24,6 @@ variable "private_subnet_db_1_cidr" {
   type        = string
   default     = "10.0.104.0/24"
 }
-
 
 # EKS
 
@@ -60,7 +51,7 @@ variable "private_subnet_eks_1_cidr" {
   default     = "10.0.4.0/24"
 }
 
-# For DB & ECR
+# For DB
 variable "allowed_ip" {
   description = "Allowed IP for SSH access"
   type        = string
