@@ -151,9 +151,25 @@ resource "aws_eks_cluster" "my_eks_cluster" {
   name     = "my-cluster"
   role_arn = aws_iam_role.eks_cluster.arn
 
+  # Kubernetes master version
+  version = "2.25"
+
   vpc_config {
-    subnet_ids = [aws_subnet.public_subnet_eks[0].id, aws_subnet.public_subnet_eks[1].id] # Use your subnet IDs
+
+    endpoint_private_access = false
+
+    # enable EKS public API server endpoint
+    endpoint_public_access = true
+
+    subnet_ids = [
+      aws_subnet.public_subnet_eks[0].id, 
+      aws_subnet.public_subnet_eks[1].id
+    ]
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_cluster_policy
+  ]
 
 }
 
@@ -189,13 +205,39 @@ resource "aws_eks_node_group" "my_eks_node_group" {
   cluster_name    = aws_eks_cluster.my_eks_cluster.name
   node_group_name = "my-node-group"
   node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = [aws_subnet.private_subnet_eks[0].id, aws_subnet.private_subnet_eks[1].id] # Use your subnet IDs
+  subnet_ids      = [
+    aws_subnet.private_subnet_eks[0].id, 
+    aws_subnet.private_subnet_eks[1].id] 
 
   scaling_config {
+    # desired number of worker nodes
     desired_size = 2
+
+    # max number of worker nodes
     max_size     = 3
+
+    # min number of worker nodes
     min_size     = 1
   }
+
+  # ami_type =  AL2_x86_74_GPU
+
+  # valid values: ON_DEMAND, SPOT
+  # capacity_type = "ON_DEMAND"
+
+  # Disk size in GB for worker nodes
+  # disk_size = 100
+
+  # instance_type = ["t3.small"]
+
+  # Kubernetes version
+  # version = 2.25
+
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_node_policy,
+    aws_iam_role_policy_attachment.eks_cni_policy,
+    aws_iam_role_policy_attachment.eks_ec2_policy
+  ]
 }
 
 resource "aws_iam_role" "eks_nodes" {
