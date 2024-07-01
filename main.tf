@@ -11,13 +11,15 @@ resource "aws_vpc" "my_vpc" {
 
 # DB subnet
 resource "aws_subnet" "private_subnet_0_db" {
-  vpc_id     = aws_vpc.my_vpc.id
-  cidr_block = var.private_subnet_db_0_cidr
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = var.private_subnet_db_0_cidr
+  availability_zone = "us-east-1a"
 }
 
 resource "aws_subnet" "private_subnet_1_db" {
-  vpc_id     = aws_vpc.my_vpc.id
-  cidr_block = var.private_subnet_db_1_cidr
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = var.private_subnet_db_1_cidr
+  availability_zone = "us-east-1b"
 }
 
 # DB subnet group
@@ -42,18 +44,19 @@ resource "aws_security_group" "my_sg_db" {
 # DB
 # can be tuned to support HA by adding multiple subnets to db_subnet_group_name
 resource "aws_db_instance" "my_db" {
-  allocated_storage    = 20
-  storage_type         = "gp2"
-  engine               = "postgres"
-  engine_version       = "12.6"
-  instance_class       = "db.t2.micro"
-  username             = var.db_username
-  password             = var.db_password
-  parameter_group_name = "default.postgres12"
-  skip_final_snapshot  = true
-  vpc_security_group_ids = [aws_security_group.my_sg_db.id]  # Attach the security group
-  db_subnet_group_name = aws_db_subnet_group.my_db_subnet_group.name
+  allocated_storage      = 10
+  db_name                = "mydb"
+  engine                 = "mysql"
+  engine_version         = "8.0"
+  instance_class         = "db.t3.micro"
+  username               = var.db_username
+  password               = var.db_password
+  parameter_group_name   = "default.mysql8.0"
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.my_sg_db.id] # Attach the security group
+  db_subnet_group_name   = aws_db_subnet_group.my_db_subnet_group.name
 }
+
 
 #################################################
 # ECR
@@ -152,7 +155,7 @@ resource "aws_eks_cluster" "my_eks_cluster" {
   role_arn = aws_iam_role.eks_cluster.arn
 
   # Kubernetes master version
-  version = "2.25"
+  # version = "2.25"
 
   vpc_config {
 
@@ -162,7 +165,7 @@ resource "aws_eks_cluster" "my_eks_cluster" {
     endpoint_public_access = true
 
     subnet_ids = [
-      aws_subnet.public_subnet_eks[0].id, 
+      aws_subnet.public_subnet_eks[0].id,
       aws_subnet.public_subnet_eks[1].id
     ]
   }
@@ -205,30 +208,32 @@ resource "aws_eks_node_group" "my_eks_node_group" {
   cluster_name    = aws_eks_cluster.my_eks_cluster.name
   node_group_name = "my-node-group"
   node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = [
-    aws_subnet.private_subnet_eks[0].id, 
-    aws_subnet.private_subnet_eks[1].id] 
+  subnet_ids = [
+    aws_subnet.private_subnet_eks[0].id,
+  aws_subnet.private_subnet_eks[1].id]
 
   scaling_config {
     # desired number of worker nodes
     desired_size = 2
 
     # max number of worker nodes
-    max_size     = 3
+    max_size = 3
 
     # min number of worker nodes
-    min_size     = 1
+    min_size = 1
   }
 
-  # ami_type =  AL2_x86_74_GPU
+  # ami_type =  AL2_x86_74_GPU  
 
   # valid values: ON_DEMAND, SPOT
-  # capacity_type = "ON_DEMAND"
+  capacity_type = "SPOT"
 
   # Disk size in GB for worker nodes
   # disk_size = 100
+  # disk_size = 20
 
-  # instance_type = ["t3.small"]
+  # instance_types = ["t3.small"]
+  instance_types = ["t2.micro"]
 
   # Kubernetes version
   # version = 2.25
@@ -266,7 +271,7 @@ resource "aws_iam_role_policy_attachment" "eks_node_policy" {
 
 resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
   role       = aws_iam_role.eks_nodes.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSCNIPolicy"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
 resource "aws_iam_role_policy_attachment" "eks_ec2_policy" {
