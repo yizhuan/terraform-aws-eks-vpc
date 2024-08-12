@@ -226,14 +226,16 @@ resource "aws_eks_node_group" "my_eks_node_group" {
   # ami_type =  AL2_x86_74_GPU  
 
   # valid values: ON_DEMAND, SPOT
-  capacity_type = "SPOT"
+  # capacity_type = "SPOT"
+  capacity_type = "ON_DEMAND" 
 
   # Disk size in GB for worker nodes
   # disk_size = 100
   # disk_size = 20
 
   # instance_types = ["t3.small"]
-  instance_types = ["t2.micro"]
+  # instance_types = ["t2.micro"]
+  instance_types = [ "c5.large" ]
 
   # Kubernetes version
   # version = 2.25
